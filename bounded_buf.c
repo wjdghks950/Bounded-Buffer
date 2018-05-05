@@ -142,14 +142,21 @@ void* Encryptor(void *param)
 		// TO DO: put encrypted_msg into buffer following the pseudo code in chap. 3
         sem_getvalue(&full, &full_value);
 
-        strcpy(buffer[full_value], encrypted_msg);
-
+        if(full_value == BUFFER_SIZE){
+            pthread_mutex_unlock(&mutex);
+            continue;
+        }
+        strcpy(buffer[in], encrypted_msg);
+        in = (in + 1) % BUFFER_SIZE;
+        printf("IN: %d\n", in);
 		// TO DO: implement exit section following the pseudo code in chap. 5
         if(pthread_mutex_unlock(&mutex) != 0){
             perror("Error in encryptor mutex");
         }
-        if(-1 == sem_post(&full)){
-            perror("Error in encryptor semaphore");
+        if(full_value < BUFFER_SIZE){
+            if(-1 == sem_post(&full)){
+                perror("Error in encryptor semaphore");
+            }
         }
 
 		// TO DO: retrieve current value of full and empty (use sem_getvalue())
@@ -184,20 +191,28 @@ void* Decryptor(void *param)
             perror("Error in decryptor mutex");
         }
         
-        sem_getvalue(&full, &full_value);
 		// TO DO: retrieve a message from buffer into encrypted_msg following the pseudo code in chap. 3
 		//		after deletion, put an empty string ("") into the deleted slot
         memset(encrypted_msg, '\0', sizeof(encrypted_msg));
-        strcpy(encrypted_msg, buffer[full_value]);
-        len = strlen(buffer[full_value]);
-        memset(buffer[full_value], '\0', len);
-
+        sem_getvalue(&empty, &empty_value);
+        
+        if(empty_value == BUFFER_SIZE){
+            pthread_mutex_unlock(&mutex);
+            continue;
+        } 
+        strcpy(encrypted_msg, buffer[out]);
+        len = strlen(buffer[out]);
+        memset(buffer[out], '\0', len);
+        out = (out + 1) % BUFFER_SIZE;
+        printf("OUT: %d\n", out);
 		// TO DO: implement exit section following the pseudo code in chap. 5
         if(pthread_mutex_unlock(&mutex) != 0){
             perror("Error in decryptor mutex");
         }
-        if(-1 == sem_post(&empty)){
-            perror("Error in decryptor semaphore");
+        if(empty_value < BUFFER_SIZE){
+            if(-1 == sem_post(&empty)){
+                perror("Error in decryptor semaphore");
+            }
         }
 
 		// TO DO: decrypt encrypted_msg into decrypted_msg (decrypted_msg[i] = encrypted_msg[i] - 3, for all i)
