@@ -148,7 +148,7 @@ void* Encryptor(void *param)
         }
         strcpy(buffer[in], encrypted_msg);
         in = (in + 1) % BUFFER_SIZE;
-        printf("IN: %d\n", in);
+
 		// TO DO: implement exit section following the pseudo code in chap. 5
         if(pthread_mutex_unlock(&mutex) != 0){
             perror("Error in encryptor mutex");
@@ -204,7 +204,7 @@ void* Decryptor(void *param)
         len = strlen(buffer[out]);
         memset(buffer[out], '\0', len);
         out = (out + 1) % BUFFER_SIZE;
-        printf("OUT: %d\n", out);
+
 		// TO DO: implement exit section following the pseudo code in chap. 5
         if(pthread_mutex_unlock(&mutex) != 0){
             perror("Error in decryptor mutex");
